@@ -1,38 +1,38 @@
-@php
-    $user    = auth()->user();
-    $avatar  = strtoupper(substr($user->name ?? 'U', 0, 2));
-    $role    = strtolower($user->role ?? '');
-    $isAdmin = in_array($role, ['admin','administrator','superadmin'], true);
-    $isPPIC  = ($role === 'ppic');
-    $isPurch = ($role === 'purchasing');
-    $isRND   = ($role === 'r&d' || $role === 'rnd');
+@php 
+    $user   = auth()->user();
+    $avatar = strtoupper(substr($user->name ?? 'U', 0, 2));
+    $role   = strtolower($user->role ?? '');
 
-    // Brand click tujuan
+    $isAdmin     = in_array($role, ['admin','administrator','superadmin'], true);
+    $isProduksi  = ($role === 'produksi');
+    $isPPIC      = ($role === 'ppic');
+    $isQA        = ($role === 'qa');
+    $isQC        = ($role === 'qc');
+
+    // Brand click tujuan -> langsung ke Dashboard
     $brandHome = route('dashboard');
-    if ($isPPIC)  $brandHome = route('halal.index');
-    if ($isPurch) $brandHome = route('purch-vendor.index');
-    // Opsional: jika ingin R&D diarahkan ke modulnya
-    // if ($isRND)  $brandHome = route('trial-rnd.index');
+
+    // Helper: cek apakah salah satu route produksi sedang aktif
+    $isProduksiMenuActive = request()->routeIs('show-permintaan')
+        || request()->routeIs('mixing.*')
+        || request()->routeIs('capsule-filling.*')
+        || request()->routeIs('tableting.*')
+        || request()->routeIs('coating.*')
+        || request()->routeIs('primary-secondary.*')
+        || request()->routeIs('qc-release.*');
+
+    // Helper: cek menu After Secondary Pack
+    // (Qty Batch + Job Sheet QC + Sampling + COA + Review + Release)
+    $isAfterPackMenuActive = request()->is('qty-batch*')
+        || request()->routeIs('qc-jobsheet.*')
+        || request()->routeIs('sampling.*')
+        || request()->routeIs('coa.*')
+        || request()->routeIs('review.*')
+        || request()->routeIs('release.*');
 @endphp
 
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
-<style>
-  .main-menu .navigation > li.active > a,
-  .main-menu .navigation > li > a:hover,
-  .main-menu .navigation > li.open > a{
-    background: linear-gradient(118deg,#dc3545,rgba(220,53,69,.7)) !important;
-    box-shadow: 0 0 10px 1px rgba(220,53,69,.5) !important;
-    color:#fff !important;
-  }
-  .main-menu .navigation > li.active > a i,
-  .main-menu .navigation > li > a:hover i,
-  .main-menu .navigation > li.open > a i{ color:#fff !important; }
-  .main-menu .navigation .menu-content > li.active > a{ color:#dc3545 !important; }
-  .main-menu .navigation .menu-content > li.active > a:before{ background:#dc3545 !important; }
-  .navbar-header .brand-text, .main-menu .brand-text { color:#dc3545 !important; }
-</style>
-
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -40,6 +40,31 @@
   <title>PT. SAMCO Farma</title>
   <link rel="shortcut icon" type="image/x-icon" href="{{ asset('app-assets/images/logo/logo.png') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    .main-menu .navigation > li.active > a,
+    .main-menu .navigation > li > a:hover,
+    .main-menu .navigation > li.open > a{
+      background: linear-gradient(118deg,#dc3545,rgba(220,53,69,.7)) !important;
+      box-shadow: 0 0 10px 1px rgba(220,53,69,.5) !important;
+      color:#fff !important;
+    }
+    .main-menu .navigation > li.active > a i,
+    .main-menu .navigation > li > a:hover i,
+    .main-menu .navigation > li.open > a i{
+      color:#fff !important;
+    }
+    .main-menu .navigation .menu-content > li.active > a{
+      color:#dc3545 !important;
+    }
+    .main-menu .navigation .menu-content > li.active > a:before{
+      background:#dc3545 !important;
+    }
+    .navbar-header .brand-text,
+    .main-menu .brand-text{
+      color:#dc3545 !important;
+    }
+  </style>
 
   {{-- Vendor CSS --}}
   <link rel="stylesheet" href="{{ asset('app-assets/vendors/css/vendors.min.css') }}">
@@ -82,32 +107,96 @@
     <div class="navbar-container d-flex content">
       <div class="bookmark-wrapper d-flex align-items-center">
         <ul class="nav navbar-nav d-xl-none">
-          <li class="nav-item"><a class="nav-link menu-toggle" href="#"><i class="ficon" data-feather="menu"></i></a></li>
+          <li class="nav-item">
+            <a class="nav-link menu-toggle" href="#"><i class="ficon" data-feather="menu"></i></a>
+          </li>
         </ul>
         <ul class="nav navbar-nav bookmark-icons">
-          @if($isAdmin)
+          {{-- Shortcut icon di header --}}
+          @if($isAdmin || $isProduksi || $isPPIC)
             <li class="nav-item d-none d-lg-block">
-              <a class="nav-link" href="{{ route('show-permintaan') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Permintaan Bahan Baku">
-                <i class="ficon" data-feather="calendar"></i>
+              <a class="nav-link"
+                 href="{{ route('mixing.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="Mixing">
+                <i class="ficon" data-feather="sliders"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-lg-block">
+              <a class="nav-link"
+                 href="{{ route('capsule-filling.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="Capsule Filling">
+                <i class="ficon" data-feather="droplet"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-lg-block">
+              <a class="nav-link"
+                 href="{{ route('tableting.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="Tableting">
+                <i class="ficon" data-feather="layers"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-lg-block">
+              <a class="nav-link"
+                 href="{{ route('coating.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="Coating">
+                <i class="ficon" data-feather="shield"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-lg-block">
+              <a class="nav-link"
+                 href="{{ route('primary-secondary.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="Primary &amp; Secondary Pack">
+                <i class="ficon" data-feather="package"></i>
+              </a>
+            </li>
+          @endif
+
+          @if($isAdmin || $isQA)
+            <li class="nav-item d-none d-lg-block">
+              <a class="nav-link"
+                 href="{{ route('qc-release.index') }}"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 title="QC Release">
+                <i class="ficon" data-feather="check-circle"></i>
               </a>
             </li>
           @endif
         </ul>
       </div>
+
       <ul class="nav navbar-nav align-items-center ms-auto">
         <li class="nav-item dropdown dropdown-user">
-          <a class="nav-link dropdown-toggle dropdown-user-link" id="dropdown-user" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link dropdown-toggle dropdown-user-link" id="dropdown-user"
+             href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <div class="user-nav d-sm-flex d-none">
               <span class="user-name fw-bolder">{{ $user->name }}</span>
               <span class="user-status">{{ $user->role }}</span>
             </div>
-            <span class="avatar bg-light-primary"><div class="avatar-content">{{ $avatar }}</div></span>
+            <span class="avatar bg-light-primary">
+              <div class="avatar-content">{{ $avatar }}</div>
+            </span>
           </a>
           <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
-            <a class="dropdown-item" href="{{ route('show-profile') }}"><i class="me-50" data-feather="user"></i> Profile</a>
+            <a class="dropdown-item" href="{{ route('show-profile') }}">
+              <i class="me-50" data-feather="user"></i> Profile
+            </a>
             <div class="dropdown-divider"></div>
-            <form action="{{ route('logout') }}" method="POST">@csrf
-              <button type="submit" class="dropdown-item"><i class="me-50" data-feather="power"></i> Logout</button>
+            <form action="{{ route('logout') }}" method="POST">
+              @csrf
+              <button type="submit" class="dropdown-item">
+                <i class="me-50" data-feather="power"></i> Logout
+              </button>
             </form>
           </div>
         </li>
@@ -121,7 +210,9 @@
       <ul class="nav navbar-nav flex-row">
         <li class="nav-item me-auto">
           <a class="navbar-brand" href="{{ $brandHome }}">
-            <span class="brand-logo"><img src="{{ asset('app-assets/images/logo/logo.png') }}" alt=""></span>
+            <span class="brand-logo">
+              <img src="{{ asset('app-assets/images/logo/logo.png') }}" alt="">
+            </span>
             <h2 class="brand-text">Samco Farma</h2>
           </a>
         </li>
@@ -132,110 +223,480 @@
     <div class="main-menu-content">
       <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
 
-        {{-- DASHBOARD: selalu ada untuk semua role --}}
+        {{-- DASHBOARD --}}
         <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
           <a class="d-flex align-items-center" href="{{ route('dashboard') }}">
-            <i data-feather="home"></i><span class="menu-title text-truncate">Dashboard</span>
+            <i data-feather="home"></i>
+            <span class="menu-title text-truncate">Dashboard</span>
           </a>
         </li>
 
         {{-- ===================== MENU ADMIN ===================== --}}
         @if ($isAdmin)
-          <li class="navigation-header"><span>User Management</span><i data-feather="more-horizontal"></i></li>
+          {{-- USER MANAGEMENT --}}
+          <li class="navigation-header">
+            <span>User Management</span><i data-feather="more-horizontal"></i>
+          </li>
+
           <li class="nav-item">
-            <a class="d-flex align-items-center" href="#"><i data-feather="user"></i><span class="menu-title text-truncate">User</span></a>
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="user"></i>
+              <span class="menu-title text-truncate">User</span>
+            </a>
             <ul class="menu-content">
-              <li class="{{ request()->is('show-rnd*') ? 'active' : '' }}">
-                <a class="d-flex align-items-center" href="{{ route('show-rnd') }}"><i data-feather="circle"></i><span class="menu-item text-truncate">R&amp;D</span></a>
+              {{-- PRODUKSI --}}
+              <li class="{{ request()->is('show-produksi*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-produksi') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Produksi</span>
+                </a>
               </li>
+              {{-- PPIC --}}
               <li class="{{ request()->is('show-ppic*') ? 'active' : '' }}">
-                <a class="d-flex align-items-center" href="{{ route('show-ppic') }}"><i data-feather="circle"></i><span class="menu-item text-truncate">PPIC Halal</span></a>
+                <a class="d-flex align-items-center" href="{{ route('show-ppic') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">PPIC</span>
+                </a>
               </li>
-              <li class="{{ request()->is('show-purchasing*') ? 'active' : '' }}">
-                <a class="d-flex align-items-center" href="{{ route('show-purchasing') }}"><i data-feather="circle"></i><span class="menu-item text-truncate">Purchasing</span></a>
+              {{-- QC --}}
+              <li class="{{ request()->is('show-qc*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-qc') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">QC</span>
+                </a>
+              </li>
+              {{-- QA --}}
+              <li class="{{ request()->is('show-qa*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-qa') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">QA</span>
+                </a>
               </li>
             </ul>
           </li>
 
-          <li class="navigation-header"><span>Master Data</span><i data-feather="more-horizontal"></i></li>
-          <li class="nav-item {{ request()->routeIs('bahan.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('bahan.index') }}">
-              <i data-feather="box"></i><span class="menu-title text-truncate">Bahan Baku</span>
+          {{-- MASTER DATA --}}
+          <li class="navigation-header">
+            <span>Master Data</span><i data-feather="more-horizontal"></i>
+          </li>
+
+          {{-- Master Produk --}}
+          <li class="nav-item {{ request()->routeIs('produksi.*') ? 'active' : '' }}">
+            <a class="d-flex align-items-center" href="{{ route('produksi.index') }}">
+              <i data-feather="box"></i>
+              <span class="menu-title text-truncate">Master Produk Produksi</span>
             </a>
           </li>
 
-          <li class="nav-item {{ request()->routeIs('show-permintaan') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('show-permintaan') }}"><i data-feather="file-text"></i><span class="menu-title text-truncate">Permintaan Bahan Baku</span></a>
+          {{-- PRODUKSI --}}
+          <li class="navigation-header">
+            <span>Produksi</span><i data-feather="more-horizontal"></i>
           </li>
-          <li class="nav-item {{ request()->routeIs('purch-vendor.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('purch-vendor.index') }}"><i data-feather="shopping-cart"></i><span class="menu-title text-truncate">Purchasing Vendor</span></a>
+
+          {{-- Proses Produksi (submenu) --}}
+          <li class="nav-item {{ $isProduksiMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="activity"></i>
+              <span class="menu-title text-truncate">Proses Produksi</span>
+            </a>
+            <ul class="menu-content">
+              {{-- Jadwal Produksi --}}
+              <li class="{{ request()->routeIs('show-permintaan') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-permintaan') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Weighing (WO)</span>
+                </a>
+              </li>
+
+              {{-- Mixing --}}
+              <li class="{{ request()->routeIs('mixing.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('mixing.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Mixing</span>
+                </a>
+              </li>
+
+              {{-- Capsule Filling --}}
+              <li class="{{ request()->routeIs('capsule-filling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('capsule-filling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Capsule Filling</span>
+                </a>
+              </li>
+
+              {{-- Tableting --}}
+              <li class="{{ request()->routeIs('tableting.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('tableting.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Tableting</span>
+                </a>
+              </li>
+
+              {{-- Coating --}}
+              <li class="{{ request()->routeIs('coating.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coating.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Coating</span>
+                </a>
+              </li>
+
+              {{-- Primary & Secondary Pack --}}
+              <li class="{{ request()->routeIs('primary-secondary.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('primary-secondary.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Primary &amp; Secondary Pack</span>
+                </a>
+              </li>
+
+              {{-- QC Release --}}
+              <li class="{{ request()->routeIs('qc-release.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qc-release.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">QC Release</span>
+                </a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item {{ request()->routeIs('uji-coa.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('uji-coa.index') }}"><i data-feather="check-square"></i><span class="menu-title text-truncate">Hasil Uji COA</span></a>
+
+          {{-- BARANG SETELAH PACK --}}
+          <li class="navigation-header">
+            <span>Barang Setelah Pack</span><i data-feather="more-horizontal"></i>
           </li>
-          <li class="nav-item {{ request()->routeIs('halal.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('halal.index') }}"><i data-feather="award"></i><span class="menu-title text-truncate">Halal PPIC</span></a>
+
+          <li class="nav-item {{ $isAfterPackMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="archive"></i>
+              <span class="menu-title text-truncate">After Secondary Pack</span>
+            </a>
+            <ul class="menu-content">
+              {{-- Qty Batch --}}
+              <li class="{{ request()->routeIs('qty-batch.index') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qty-batch.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Qty Batch</span>
+                </a>
+              </li>
+
+              {{-- Job Sheet QC --}}
+              <li class="{{ request()->routeIs('qc-jobsheet.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qc-jobsheet.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Job Sheet QC</span>
+                </a>
+              </li>
+
+              {{-- Sampling --}}
+              <li class="{{ request()->routeIs('sampling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('sampling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Sampling</span>
+                </a>
+              </li>
+
+              {{-- COA QC/QA --}}
+              <li class="{{ request()->routeIs('coa.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coa.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">COA QC/QA</span>
+                </a>
+              </li>
+
+              {{-- Review --}}
+              <li class="{{ request()->routeIs('review.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('review.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Review &amp; Release</span>
+                </a>
+              </li>
+
+              {{-- Release (Logsheet) --}}
+              <li class="{{ request()->routeIs('release.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('release.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Release</span>
+                </a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item {{ request()->routeIs('sampling-pch.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('sampling-pch.index') }}"><i data-feather="droplet"></i><span class="menu-title text-truncate">Sampling PCH</span></a>
+        @endif {{-- end Admin --}}
+
+        {{-- ===================== MENU PRODUKSI (non-admin) ===================== --}}
+        @if ($isProduksi && !$isAdmin)
+          {{-- PRODUKSI --}}
+          <li class="navigation-header">
+            <span>Produksi</span><i data-feather="more-horizontal"></i>
           </li>
-          <li class="nav-item {{ request()->routeIs('trial-rnd.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('trial-rnd.index') }}"><i data-feather="cpu"></i><span class="menu-title text-truncate">Trial R&amp;D</span></a>
+
+          {{-- Proses Produksi (submenu) --}}
+          <li class="nav-item {{ $isProduksiMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="activity"></i>
+              <span class="menu-title text-truncate">Proses Produksi</span>
+            </a>
+            <ul class="menu-content">
+              {{-- Jadwal Produksi --}}
+              <li class="{{ request()->routeIs('show-permintaan') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-permintaan') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Jadwal Produksi (WO)</span>
+                </a>
+              </li>
+
+              {{-- Mixing --}}
+              <li class="{{ request()->routeIs('mixing.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('mixing.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Mixing</span>
+                </a>
+              </li>
+
+              {{-- Capsule Filling --}}
+              <li class="{{ request()->routeIs('capsule-filling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('capsule-filling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Capsule Filling</span>
+                </a>
+              </li>
+
+              {{-- Tableting --}}
+              <li class="{{ request()->routeIs('tableting.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('tableting.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Tableting</span>
+                </a>
+              </li>
+
+              {{-- Coating --}}
+              <li class="{{ request()->routeIs('coating.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coating.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Coating</span>
+                </a>
+              </li>
+
+              {{-- Primary & Secondary Pack --}}
+              <li class="{{ request()->routeIs('primary-secondary.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('primary-secondary.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Primary &amp; Secondary Pack</span>
+                </a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item {{ request()->routeIs('registrasi.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('registrasi.index') }}"><i data-feather="grid"></i><span class="menu-title text-truncate">Registrasi</span></a>
+
+          {{-- BARANG SETELAH PACK (Produksi) --}}
+          <li class="navigation-header">
+            <span>Barang Setelah Pack</span><i data-feather="more-horizontal"></i>
+          </li>
+
+          <li class="nav-item {{ $isAfterPackMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="archive"></i>
+              <span class="menu-title text-truncate">After Secondary Pack</span>
+            </a>
+            <ul class="menu-content">
+              {{-- Qty Batch --}}
+              <li class="{{ request()->routeIs('qty-batch.index') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qty-batch.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Qty Batch</span>
+                </a>
+              </li>
+
+              {{-- Job Sheet QC --}}
+              <li class="{{ request()->routeIs('qc-jobsheet.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qc-jobsheet.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Job Sheet QC</span>
+                </a>
+              </li>
+
+              {{-- Sampling --}}
+              <li class="{{ request()->routeIs('sampling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('sampling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Sampling</span>
+                </a>
+              </li>
+
+              {{-- COA QC/QA --}}
+              <li class="{{ request()->routeIs('coa.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coa.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">COA QC/QA</span>
+                </a>
+              </li>
+
+              {{-- Review --}}
+              <li class="{{ request()->routeIs('review.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('review.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Review &amp; Release</span>
+                </a>
+              </li>
+
+              {{-- Release --}}
+              <li class="{{ request()->routeIs('release.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('release.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Release</span>
+                </a>
+              </li>
+            </ul>
           </li>
         @endif
 
-        {{-- ===================== MENU PPIC ===================== --}}
-        @if ($isPPIC)
-          <li class="nav-item {{ request()->routeIs('halal.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('halal.index') }}">
-              <i data-feather="award"></i><span class="menu-title text-truncate">Halal PPIC</span>
+        {{-- ===================== MENU PPIC (non-admin) ===================== --}}
+        @if ($isPPIC && !$isAdmin)
+          <li class="navigation-header">
+            <span>PPIC</span><i data-feather="more-horizontal"></i>
+          </li>
+
+          {{-- Proses Produksi (PPIC fokus ke WO + monitoring) --}}
+          <li class="nav-item {{ $isProduksiMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="activity"></i>
+              <span class="menu-title text-truncate">Proses Produksi</span>
             </a>
+            <ul class="menu-content">
+              {{-- Jadwal Produksi / WO --}}
+              <li class="{{ request()->routeIs('show-permintaan') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('show-permintaan') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Jadwal Produksi (WO)</span>
+                </a>
+              </li>
+
+              {{-- Kalau PPIC juga diizinkan akses module lain, bisa pakai yang di bawah:
+                   pastikan middleware di web.php sudah ditambah "PPIC" juga
+              --}}
+              <li class="{{ request()->routeIs('mixing.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('mixing.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Mixing</span>
+                </a>
+              </li>
+
+              <li class="{{ request()->routeIs('capsule-filling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('capsule-filling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Capsule Filling</span>
+                </a>
+              </li>
+
+              <li class="{{ request()->routeIs('tableting.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('tableting.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Tableting</span>
+                </a>
+              </li>
+
+              <li class="{{ request()->routeIs('coating.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coating.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Coating</span>
+                </a>
+              </li>
+
+              <li class="{{ request()->routeIs('primary-secondary.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('primary-secondary.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Primary &amp; Secondary Pack</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="navigation-header">
+            <span>Barang Setelah Pack</span><i data-feather="more-horizontal"></i>
+          </li>
+
+          <li class="nav-item {{ $isAfterPackMenuActive ? 'active open' : '' }}">
+            <a class="d-flex align-items-center" href="#">
+              <i data-feather="archive"></i>
+              <span class="menu-title text-truncate">After Secondary Pack</span>
+            </a>
+            <ul class="menu-content">
+              <li class="{{ request()->routeIs('qty-batch.index') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qty-batch.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Qty Batch</span>
+                </a>
+              </li>
+              <li class="{{ request()->routeIs('qc-jobsheet.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('qc-jobsheet.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Job Sheet QC</span>
+                </a>
+              </li>
+              <li class="{{ request()->routeIs('sampling.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('sampling.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Sampling</span>
+                </a>
+              </li>
+              <li class="{{ request()->routeIs('coa.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('coa.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">COA QC/QA</span>
+                </a>
+              </li>
+              <li class="{{ request()->routeIs('review.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('review.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Review &amp; Release</span>
+                </a>
+              </li>
+              <li class="{{ request()->routeIs('release.*') ? 'active' : '' }}">
+                <a class="d-flex align-items-center" href="{{ route('release.index') }}">
+                  <i data-feather="circle"></i>
+                  <span class="menu-item text-truncate">Release</span>
+                </a>
+              </li>
+            </ul>
           </li>
         @endif
 
-        {{-- ===================== MENU PURCHASING ===================== --}}
-        @if ($isPurch)
-          <li class="nav-item {{ request()->routeIs('purch-vendor.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('purch-vendor.index') }}"><i data-feather="shopping-cart"></i><span class="menu-title text-truncate">Purchasing Vendor</span></a>
+        {{-- ===================== MENU QA (non-admin) ===================== --}}
+        @if ($isQA && !$isAdmin)
+          <li class="navigation-header">
+            <span>Produksi</span><i data-feather="more-horizontal"></i>
           </li>
-          <li class="nav-item {{ request()->routeIs('sampling-pch.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('sampling-pch.index') }}"><i data-feather="droplet"></i><span class="menu-title text-truncate">Sampling PCH</span></a>
+
+          {{-- QC Release --}}
+          <li class="nav-item {{ request()->routeIs('qc-release.*') ? 'active' : '' }}">
+            <a class="d-flex align-items-center" href="{{ route('qc-release.index') }}">
+              <i data-feather="check-circle"></i>
+              <span class="menu-title text-truncate">QC Release</span>
+            </a>
+          </li>
+
+          {{-- Dokumen QA / COA / Review / Release --}}
+          <li class="navigation-header">
+            <span>Dokumen QA</span><i data-feather="more-horizontal"></i>
+          </li>
+
+          <li class="nav-item {{ request()->routeIs('coa.*') ? 'active' : '' }}">
+            <a class="d-flex align-items-center" href="{{ route('coa.index') }}">
+              <i data-feather="file-text"></i>
+              <span class="menu-title text-truncate">COA QC/QA</span>
+            </a>
+          </li>
+
+          <li class="nav-item {{ request()->routeIs('review.*') ? 'active' : '' }}">
+            <a class="d-flex align-items-center" href="{{ route('review.index') }}">
+              <i data-feather="check-square"></i>
+              <span class="menu-title text-truncate">Review</span>
+            </a>
+          </li>
+
+          <li class="nav-item {{ request()->routeIs('release.*') ? 'active' : '' }}">
+            <a class="d-flex align-items-center" href="{{ route('release.index') }}">
+              <i data-feather="check-circle"></i>
+              <span class="menu-title text-truncate">Release</span>
+            </a>
           </li>
         @endif
-
-        {{-- ===================== MENU R&D ===================== --}}
-        @if ($isRND)
-          <li class="nav-item {{ request()->routeIs('show-permintaan') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('show-permintaan') }}">
-              <i data-feather="file-text"></i><span class="menu-title text-truncate">Permintaan Bahan Baku</span>
-            </a>
-          </li>
-          <li class="nav-item {{ request()->routeIs('uji-coa.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('uji-coa.index') }}">
-              <i data-feather="check-square"></i><span class="menu-title text-truncate">Hasil Uji COA</span>
-            </a>
-          </li>
-          <li class="nav-item {{ request()->routeIs('trial-rnd.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('trial-rnd.index') }}">
-              <i data-feather="cpu"></i><span class="menu-title text-truncate">Trial R&amp;D</span>
-            </a>
-          </li>
-          <li class="nav-item {{ request()->routeIs('registrasi.*') ? 'active' : '' }}">
-            <a class="d-flex align-items-center" href="{{ route('registrasi.index') }}">
-              <i data-feather="grid"></i><span class="menu-title text-truncate">Registrasi</span>
-            </a>
-          </li>
-        @endif
-
-        {{-- RIWAYAT: tampil untuk semua role --}}
-        <li class="nav-item {{ request()->routeIs('riwayat.*') ? 'active' : '' }}">
-          <a class="d-flex align-items-center" href="{{ route('riwayat.index') }}">
-            <i data-feather="activity"></i><span class="menu-title text-truncate">Riwayat Proses</span>
-          </a>
-        </li>
 
       </ul>
     </div>
@@ -249,7 +710,10 @@
       <div class="content-header row"></div>
       <div class="content-body">
         @yield('content')
-        <button class="btn btn-primary btn-icon scroll-top" type="button"><i data-feather="arrow-up"></i></button>
+
+        <button class="btn btn-primary btn-icon scroll-top" type="button">
+          <i data-feather="arrow-up"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -265,7 +729,7 @@
   <script src="{{ asset('app-assets/vendors/js/charts/apexcharts.min.js') }}"></script>
   <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}"></script>
   <script src="{{ asset('app-assets/vendors/js/pickers/pickadate/picker.js') }}"></script>
-  <script src="{{ asset('app-assets/vendors/js/pickers/pickadate/picker.date.js') }}"></script>
+  <script src="{{ asset('app-assets/vendors/js/pickers/pickadate/picker.date.js') }}"></script -->
   <script src="{{ asset('app-assets/vendors/js/pickers/pickadate/picker.time.js') }}"></script>
   <script src="{{ asset('app-assets/vendors/js/pickers/pickadate/legacy.js') }}"></script>
   <script src="{{ asset('app-assets/vendors/js/pickers/flatpickr/flatpickr.min.js') }}"></script>
@@ -284,7 +748,11 @@
   <script src="{{ asset('app-assets/js/scripts/forms/pickers/form-pickers.min.js') }}"></script>
 
   <script>
-    $(window).on('load', function(){ if (feather) feather.replace({ width:14, height:14 }); });
+    $(window).on('load', function () {
+      if (feather) {
+        feather.replace({ width: 14, height: 14 });
+      }
+    });
   </script>
 </body>
 </html>

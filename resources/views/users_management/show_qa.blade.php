@@ -7,23 +7,23 @@
       <div class="card">
 
         <div class="card-header d-flex justify-content-between align-items-center">
-          <h4 class="card-title">Daftar Akun PPIC</h4>
+          <h4 class="card-title">Daftar Akun QA</h4>
           <div>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inlineForm">
-              Tambah Akun PPIC
+              Tambah Akun QA
             </button>
           </div>
         </div>
 
-        {{-- Modal Tambah PPIC --}}
+        {{-- Modal Tambah QA --}}
         <div class="modal fade text-start" id="inlineForm" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
-                <h4 class="modal-title">Tambahkan Akun PPIC</h4>
+                <h4 class="modal-title">Tambahkan Akun QA</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <form action="{{ url('/show-ppic') }}" method="POST">
+              <form action="{{ url('/show-qa') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                   <label>Nama: </label>
@@ -78,19 +78,12 @@
                         <i data-feather="more-vertical"></i>
                       </button>
                       <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{{ route('edit-ppic', ['id' => $user->id]) }}">
+                        <a class="dropdown-item" href="{{ route('edit-qa', ['id' => $user->id]) }}">
                           <i data-feather="edit-2" class="me-50"></i><span>Edit</span>
                         </a>
-
-                        {{-- Login sebagai PPIC ini --}}
-                        <a class="dropdown-item" href="{{ route('login-as-ppic', ['id' => $user->id]) }}"
-                           onclick="return confirm('Anda yakin ingin login sebagai {{ $user->name }}?')">
-                          <i data-feather="log-in" class="me-50"></i><span>Login sebagai PPIC ini</span>
-                        </a>
-
-                        <form action="{{ route('delete-ppic', ['id' => $user->id]) }}"
+                        <form action="{{ route('delete-qa', ['id' => $user->id]) }}"
                               method="POST"
-                              onsubmit="return confirm('Hapus akun PPIC ini?')">
+                              onsubmit="return confirm('Hapus akun QA ini?')">
                           @csrf
                           @method('DELETE')
                           <button class="dropdown-item" type="submit">
@@ -103,7 +96,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="4" class="text-center text-muted">Belum ada akun PPIC</td>
+                  <td colspan="4" class="text-center text-muted">Belum ada akun QA</td>
                 </tr>
               @endforelse
             </tbody>

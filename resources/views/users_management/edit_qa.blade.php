@@ -6,10 +6,10 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h4 class="card-title">Edit Akun PPIC</h4>
+          <h4 class="card-title">Edit Akun QA</h4>
         </div>
         <div class="card-body">
-          <form class="form" action="{{ url('/show-ppic/'.$ppic->id) }}" method="POST">
+          <form class="form" action="{{ url('/show-qa/'.$qa->id) }}" method="POST">
             @csrf
             @method('put')
             <div class="row">
@@ -20,7 +20,7 @@
                     type="text"
                     class="form-control"
                     name="name"
-                    value="{{ $ppic->name }}"
+                    value="{{ $qa->name }}"
                     placeholder="Masukkan Nama Baru"
                   >
                 </div>
@@ -34,7 +34,7 @@
                     type="email"
                     class="form-control"
                     name="email"
-                    value="{{ $ppic->email }}"
+                    value="{{ $qa->email }}"
                     placeholder="Masukkan Email Baru"
                   >
                 </div>

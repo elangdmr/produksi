@@ -11,66 +11,14 @@ use Illuminate\Support\Facades\Hash;
 class UserController extends Controller
 {
     /* =========================================================
-     * R&D  (pengganti "Siswa")
-     * =======================================================*/
-    public function showRND()
-    {
-        $users = User::where('role', 'R&D')->orderBy('name')->get();
-        return view('users_management.show_rnd', compact('users'));
-    }
-
-    public function storeRND(Request $request)
-    {
-        $request->validate([
-            'name'     => ['required', 'min:3'],
-            'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'min:7'],
-        ]);
-
-        User::create([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'role'              => 'R&D',
-            'email_verified_at' => now(),
-            'password'          => Hash::make($request->password),
-        ]);
-
-        return redirect()->route('show-rnd')->with('success', 'Akun R&D berhasil dibuat.');
-    }
-
-    public function editRND($id)
-    {
-        $rnd = User::where('id', $id)->where('role', 'R&D')->firstOrFail();
-        return view('users_management.edit_rnd', compact('rnd'));
-    }
-
-    public function updateRND(Request $request, $id)
-    {
-        $request->validate([
-            'name'     => ['required', 'min:3'],
-            'email'    => ['required', 'email', 'unique:users,email,' . $id],
-            'password' => ['nullable', 'min:7'],
-        ]);
-
-        $data = [
-            'name'  => $request->name,
-            'email' => $request->email,
-        ];
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        User::where('id', $id)->where('role', 'R&D')->update($data);
-
-        return redirect()->route('show-rnd')->with('success', 'Akun R&D diperbarui.');
-    }
-
-    /* =========================================================
      * PPIC
      * =======================================================*/
     public function showPPIC()
     {
-        $users = User::where('role', 'PPIC')->orderBy('name')->get();
+        $users = User::where('role', 'PPIC')
+            ->orderBy('name')
+            ->get();
+
         return view('users_management.show_ppic', compact('users'));
     }
 
@@ -90,12 +38,17 @@ class UserController extends Controller
             'password'          => Hash::make($request->password),
         ]);
 
-        return redirect()->route('show-ppic')->with('success', 'Akun PPIC berhasil dibuat.');
+        return redirect()
+            ->route('show-ppic')
+            ->with('success', 'Akun PPIC berhasil dibuat.');
     }
 
     public function editPPIC($id)
     {
-        $ppic = User::where('id', $id)->where('role', 'PPIC')->firstOrFail();
+        $ppic = User::where('id', $id)
+            ->where('role', 'PPIC')
+            ->firstOrFail();
+
         return view('users_management.edit_ppic', compact('ppic'));
     }
 
@@ -111,25 +64,34 @@ class UserController extends Controller
             'name'  => $request->name,
             'email' => $request->email,
         ];
+
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
-        User::where('id', $id)->where('role', 'PPIC')->update($data);
+        User::where('id', $id)
+            ->where('role', 'PPIC')
+            ->update($data);
 
-        return redirect()->route('show-ppic')->with('success', 'Akun PPIC diperbarui.');
+        return redirect()
+            ->route('show-ppic')
+            ->with('success', 'Akun PPIC diperbarui.');
     }
 
     /* =========================================================
-     * PURCHASING
+     * PRODUKSI
+     * (biarkan tetap ada kalau masih dipakai)
      * =======================================================*/
-    public function showPurchasing()
+    public function showProduksi()
     {
-        $users = User::where('role', 'Purchasing')->orderBy('name')->get();
-        return view('users_management.show_purchasing', compact('users'));
+        $users = User::where('role', 'Produksi')
+            ->orderBy('name')
+            ->get();
+
+        return view('users_management.show_produksi', compact('users'));
     }
 
-    public function storePurchasing(Request $request)
+    public function storeProduksi(Request $request)
     {
         $request->validate([
             'name'     => ['required', 'min:3'],
@@ -140,21 +102,26 @@ class UserController extends Controller
         User::create([
             'name'              => $request->name,
             'email'             => $request->email,
-            'role'              => 'Purchasing',
+            'role'              => 'Produksi',
             'email_verified_at' => now(),
             'password'          => Hash::make($request->password),
         ]);
 
-        return redirect()->route('show-purchasing')->with('success', 'Akun Purchasing berhasil dibuat.');
+        return redirect()
+            ->route('show-produksi')
+            ->with('success', 'Akun Produksi berhasil dibuat.');
     }
 
-    public function editPurchasing($id)
+    public function editProduksi($id)
     {
-        $purchasing = User::where('id', $id)->where('role', 'Purchasing')->firstOrFail();
-        return view('users_management.edit_purchasing', compact('purchasing'));
+        $produksi = User::where('id', $id)
+            ->where('role', 'Produksi')
+            ->firstOrFail();
+
+        return view('users_management.edit_produksi', compact('produksi'));
     }
 
-    public function updatePurchasing(Request $request, $id)
+    public function updateProduksi(Request $request, $id)
     {
         $request->validate([
             'name'     => ['required', 'min:3'],
@@ -166,13 +133,175 @@ class UserController extends Controller
             'name'  => $request->name,
             'email' => $request->email,
         ];
+
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
-        User::where('id', $id)->where('role', 'Purchasing')->update($data);
+        User::where('id', $id)
+            ->where('role', 'Produksi')
+            ->update($data);
 
-        return redirect()->route('show-purchasing')->with('success', 'Akun Purchasing diperbarui.');
+        return redirect()
+            ->route('show-produksi')
+            ->with('success', 'Akun Produksi diperbarui.');
+    }
+
+    /* =========================================================
+     * QC
+     * =======================================================*/
+    public function showQC()
+    {
+        $users = User::where('role', 'QC')
+            ->orderBy('name')
+            ->get();
+
+        return view('users_management.show_qc', compact('users'));
+    }
+
+    public function storeQC(Request $request)
+    {
+        $request->validate([
+            'name'     => ['required', 'min:3'],
+            'email'    => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'min:7'],
+        ]);
+
+        User::create([
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'role'              => 'QC',
+            'email_verified_at' => now(),
+            'password'          => Hash::make($request->password),
+        ]);
+
+        return redirect()
+            ->route('show-qc')
+            ->with('success', 'Akun QC berhasil dibuat.');
+    }
+
+    public function editQC($id)
+    {
+        $qc = User::where('id', $id)
+            ->where('role', 'QC')
+            ->firstOrFail();
+
+        return view('users_management.edit_qc', compact('qc'));
+    }
+
+    public function updateQC(Request $request, $id)
+    {
+        $request->validate([
+            'name'     => ['required', 'min:3'],
+            'email'    => ['required', 'email', 'unique:users,email,' . $id],
+            'password' => ['nullable', 'min:7'],
+        ]);
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        User::where('id', $id)
+            ->where('role', 'QC')
+            ->update($data);
+
+        return redirect()
+            ->route('show-qc')
+            ->with('success', 'Akun QC diperbarui.');
+    }
+
+    /* =========================================================
+     * QA
+     * =======================================================*/
+    public function showQA()
+    {
+        $users = User::where('role', 'QA')
+            ->orderBy('name')
+            ->get();
+
+        return view('users_management.show_qa', compact('users'));
+    }
+
+    public function storeQA(Request $request)
+    {
+        $request->validate([
+            'name'     => ['required', 'min:3'],
+            'email'    => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'min:7'],
+        ]);
+
+        User::create([
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'role'              => 'QA',
+            'email_verified_at' => now(),
+            'password'          => Hash::make($request->password),
+        ]);
+
+        return redirect()
+            ->route('show-qa')
+            ->with('success', 'Akun QA berhasil dibuat.');
+    }
+
+    public function editQA($id)
+    {
+        $qa = User::where('id', $id)
+            ->where('role', 'QA')
+            ->firstOrFail();
+
+        return view('users_management.edit_qa', compact('qa'));
+    }
+
+    public function updateQA(Request $request, $id)
+    {
+        $request->validate([
+            'name'     => ['required', 'min:3'],
+            'email'    => ['required', 'email', 'unique:users,email,' . $id],
+            'password' => ['nullable', 'min:7'],
+        ]);
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        User::where('id', $id)
+            ->where('role', 'QA')
+            ->update($data);
+
+        return redirect()
+            ->route('show-qa')
+            ->with('success', 'Akun QA diperbarui.');
+    }
+
+    /* =========================================================
+     * LOGIN SEBAGAI PPIC (impersonate)
+     * =======================================================*/
+    public function loginAsPPIC($id)
+    {
+        // pastikan user yang dituju benar-benar PPIC
+        $ppic = User::where('id', $id)
+            ->where('role', 'PPIC')
+            ->firstOrFail();
+
+        // simpan id admin yang lagi login (opsional, kalau mau nanti "kembali sebagai admin")
+        if (! session()->has('impersonator_id')) {
+            session(['impersonator_id' => Auth::id()]);
+        }
+
+        Auth::login($ppic);
+
+        // sesuaikan redirect-nya kalau ada dashboard khusus PPIC
+        return redirect()->route('dashboard')->with('success', 'Sekarang login sebagai PPIC: ' . $ppic->name);
     }
 
     /* =========================================================
@@ -184,15 +313,20 @@ class UserController extends Controller
         $role = $user->role;
         $user->delete();
 
+        if ($role === 'Produksi') {
+            return redirect()->route('show-produksi')->with('success', 'Akun Produksi dihapus.');
+        }
+        if ($role === 'QC') {
+            return redirect()->route('show-qc')->with('success', 'Akun QC dihapus.');
+        }
+        if ($role === 'QA') {
+            return redirect()->route('show-qa')->with('success', 'Akun QA dihapus.');
+        }
         if ($role === 'PPIC') {
             return redirect()->route('show-ppic')->with('success', 'Akun PPIC dihapus.');
         }
-        if ($role === 'R&D') {
-            return redirect()->route('show-rnd')->with('success', 'Akun R&D dihapus.');
-        }
-        if ($role === 'Purchasing') {
-            return redirect()->route('show-purchasing')->with('success', 'Akun Purchasing dihapus.');
-        }
+
+        // fallback
         return redirect()->route('dashboard')->with('success', 'Akun dihapus.');
     }
 
@@ -240,8 +374,8 @@ class UserController extends Controller
     /* =========================================================
      * Alias kompatibilitas lama (opsional)
      * =======================================================*/
-    public function showSiswa()                  { return $this->showRND(); }
-    public function storeSiswa(Request $r)       { return $this->storeRND($r); }
-    public function editSiswa($id)               { return $this->editRND($id); }
-    public function updateSiswa(Request $r, $id) { return $this->updateRND($r, $id); }
+    public function showSiswa()                  { return $this->showProduksi(); }
+    public function storeSiswa(Request $r)       { return $this->storeProduksi($r); }
+    public function editSiswa($id)               { return $this->editProduksi($id); }
+    public function updateSiswa(Request $r, $id) { return $this->updateProduksi($r, $id); }
 }

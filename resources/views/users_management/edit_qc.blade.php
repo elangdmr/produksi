@@ -6,10 +6,10 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h4 class="card-title">Edit Akun PPIC</h4>
+          <h4 class="card-title">Edit Akun QC</h4>
         </div>
         <div class="card-body">
-          <form class="form" action="{{ url('/show-ppic/'.$ppic->id) }}" method="POST">
+          <form class="form" action="{{ url('/show-qc/'.$qc->id) }}" method="post">
             @csrf
             @method('put')
             <div class="row">
@@ -20,9 +20,9 @@
                     type="text"
                     class="form-control"
                     name="name"
-                    value="{{ $ppic->name }}"
+                    value="{{ $qc->name }}"
                     placeholder="Masukkan Nama Baru"
-                  >
+                  />
                 </div>
                 @error('name') <div class="text-danger mt-1">{{ $message }}</div> @enderror
               </div>
@@ -34,9 +34,9 @@
                     type="email"
                     class="form-control"
                     name="email"
-                    value="{{ $ppic->email }}"
+                    value="{{ $qc->email }}"
                     placeholder="Masukkan Email Baru"
-                  >
+                  />
                 </div>
                 @error('email') <div class="text-danger mt-1">{{ $message }}</div> @enderror
               </div>
@@ -48,8 +48,8 @@
                     type="password"
                     class="form-control"
                     name="password"
-                    placeholder="Masukkan Password Baru"
-                  >
+                    placeholder="Masukkan Password Baru (jika ingin diganti)"
+                  />
                 </div>
                 @error('password') <div class="text-danger mt-1">{{ $message }}</div> @enderror
               </div>
